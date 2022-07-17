@@ -1,6 +1,7 @@
 from multiprocessing import Process, Pipe
 from os import getpid
 from datetime import datetime
+from src.parsing.parser import read_configs_from
 
 
 counter = 0
@@ -72,9 +73,11 @@ def process_three(pipe32, pipe13, identifier):
 
 
 if __name__ == '__main__':
-    one_and_two, two_and_one = Pipe()
-    two_and_three, three_and_two = Pipe()
-    one_and_three, three_and_one = Pipe()
+    qtt, pipes = read_configs_from('config.txt')
+
+    one_and_two, two_and_one = pipes[(0, 1)]
+    two_and_three, three_and_two = pipes[(1, 2)]
+    one_and_three, three_and_one = pipes[(0, 2)]
 
     process1 = Process(target=process_one,
                        args=(one_and_two, one_and_three, 1))
