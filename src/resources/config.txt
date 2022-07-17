@@ -4,3 +4,18 @@
 0 1
 0 2
 1 2
+#operations
+>0
+event
+send 'Hello' 2
+event
+receive 2
+send 'Yes' 3
+>1
+receive 3
+receive 1
+send 'A!' 1
+>2
+send 'Hell yeah!' 2
+event
+receive 1
