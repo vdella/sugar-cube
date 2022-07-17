@@ -8,6 +8,7 @@ counter = 0
 
 
 def local_time():
+    """:returns: a concatenation of strings stating the logical and physical times for a process."""
     process_info = 'Process {}\n'.format(getpid())
     logical_time = '> Logical time = {}u\n'.format(counter)
     physical_time = '> Physical time = {}ms'.format(datetime.now())
@@ -15,41 +16,51 @@ def local_time():
 
 
 def update_time_according_to(time_stamp):
+    """Upon receiving a message, compares its internal clock with the sender's :param timestamp
+    and :returns the biggest value between both.
+    :return:
+    """
     return max(time_stamp, counter) + 1
 
 
 def event(idenfier):
+    """Abstract event, as some internal operation only known by the process that executes it.
+    Updates its clock."""
     global counter
     counter += 1
-    print('Event has happened in {}! Time = {}u'.format(idenfier, counter))
+    print('Event has happened in {}! Time = {}u\n'.format(idenfier, counter))
 
 
 def send(content, pipe: Pipe, identifier):
+    """Sends :param content through a :param pipe for another process. Its identifier
+    is appended in order to be easier to observe which process sent the message. Updates
+    the internal clock."""
     global counter
     counter += 1
 
-    pipe.send((identifier, counter))
+    pipe.send((content, identifier, counter))
 
-    print('Message from {}! Time: {}\n'.format(identifier, counter))
-    return
+    print('Message \'{}\' from {}! Time: {}\n'.format(content, identifier, counter))
 
-
-# TODO fix logical time. Communication works.
 
 def receive(pipe, identifier):
-    message, timestamp = pipe.recv()
+    """Receives a message through a :param pipe. Updates the internal clock.
+
+    :param pipe:
+    :param identifier:
+    """
+    message, sender_pid, timestamp = pipe.recv()
 
     global counter
     counter = update_time_according_to(timestamp)
 
-    print('{} to {}! Time: {}\n'.format(message, identifier, counter))
+    print('\'{}\' from {} to {}! Time: {}\n'.format(message, sender_pid, identifier, counter))
     return
 
 # !!!
 
 
 def process_one(pipe12, pipe13, identifier):
-    pid = identifier
     event(identifier)
     send('Hello!', pipe12, identifier)
     event(identifier)
@@ -58,22 +69,19 @@ def process_one(pipe12, pipe13, identifier):
 
 
 def process_two(pipe21, pipe23, identifier):
-    pid = identifier
     receive(pipe23, identifier)
     receive(pipe21, identifier)
     send('A!', pipe21, identifier)
 
 
 def process_three(pipe32, pipe13, identifier):
-    pid = identifier
-
     send('Hell yeah!', pipe32, identifier)
     event(identifier)
     receive(pipe13, identifier)
 
 
 if __name__ == '__main__':
-    qtt, pipes = read_configs_from('config.txt')
+    qtt, pipes, operations = read_configs_from('config.txt')
 
     one_and_two, two_and_one = pipes[(0, 1)]
     two_and_three, three_and_two = pipes[(1, 2)]
