@@ -8,20 +8,20 @@ def read_configs_from(filepath) -> tuple:
         lines = [line.rstrip() for line in lines]
 
     process_qtt = lines[lines.index('#processes') + 1: lines.index('#pipes')]
-    pipes: set = __build_pipes_from(lines[lines.index('#pipes') + 1:])
+    pipes: dict = __build_pipes_from(lines[lines.index('#pipes') + 1:])
 
     return process_qtt, pipes
 
 
-def __build_pipes_from(config_lines: list) -> set:
-    pipes = set()
+def __build_pipes_from(config_lines: list) -> dict:
+    pipes = dict()
 
     for line in config_lines:
-        src, connection_type, dst = line.split()
-        pipes.add(('duplex', (src, dst))) if connection_type == '<->' else pipes.add(('simplex', (src, dst)))
+        src, dst = line.split()
+        pipes[(int(src), int(dst))] = Pipe()
 
     return pipes
 
 
 if __name__ == '__main__':
-    read_configs_from('config.txt')
+    print(read_configs_from('config.txt'))
