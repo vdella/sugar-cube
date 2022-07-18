@@ -78,11 +78,11 @@ class WorkerPool:
 
 
 if __name__ == '__main__':
-    qtt, pipes = read_configs_from('config.txt')
+    qtt, channels = read_configs_from('config.txt')
 
-    one_and_two, two_and_one = pipes[(0, 1)]
-    two_and_three, three_and_two = pipes[(1, 2)]
-    one_and_three, three_and_one = pipes[(0, 2)]
+    one_and_two, two_and_one = channels[(0, 1)]
+    two_and_three, three_and_two = channels[(1, 2)]
+    one_and_three, three_and_one = channels[(0, 2)]
 
     pool = WorkerPool(3)
 
@@ -97,6 +97,3 @@ if __name__ == '__main__':
     process1.join()
     process2.join()
     process3.join()
-
-
-
