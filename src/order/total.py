@@ -3,33 +3,39 @@ from datetime import datetime
 from src.parsing.parser import read_configs_from
 
 
+counters = list()
+
+
 def counters_for(process_qtt: int):
-    return [0 * process_qtt]
+    return [0 for _ in range(process_qtt)]
 
 
 def local_time_for(pid):
     """:returns: a concatenation of strings stating the logical and physical times for a process."""
     process_info = 'Process {}\n'.format(pid)
-    logical_time = '> Logical time = {}u\n'.format(counters)
+    logical_time = '> Logical time = {}\n'.format(counters)
     physical_time = '> Physical time = {}ms'.format(datetime.now())
     return process_info + logical_time + physical_time
 
 
-def sync_time_to(timestamps: list):
+def sync_time_to(identifier, timestamps: list):
     global counters
 
     for i, _ in enumerate(counters):
         counters[i] = max(counters[i], timestamps[i])
 
+        if i == identifier:
+            counters[i] += 1
+
     return counters
 
 
-def event(idenfier):
+def event(identifier):
     """Abstract event, as some internal operation only known by the process that executes it.
     Updates its clock."""
     global counters
-    counters[idenfier] += 1
-    print('Event has happened in {}! Time = {}u\n'.format(idenfier, counters))
+    counters[identifier] += 1
+    print('Event has happened in {}! Time = {}\n'.format(identifier + 1, counters))
 
 
 def broadcast(content, pipes, identifier):
@@ -39,7 +45,7 @@ def broadcast(content, pipes, identifier):
     for pipe in pipes:
         pipe.send((content, identifier, counters))
 
-    print('Message \'{}\' from {}! Time: {}\n'.format(content, identifier, counters))
+    print('Message \'{}\' from {}! Time: {}\n'.format(content, identifier + 1, counters))
 
 
 def deliver(pipe, identifier):
@@ -47,13 +53,11 @@ def deliver(pipe, identifier):
     message, sender_pid, timestamp = pipe.recv()
 
     global counters
-    counters = sync_time_to(timestamp)
+    counters = sync_time_to(identifier, timestamp)
 
-    print('\'{}\' from {} to {}! Time: {}\n'.format(message, sender_pid, identifier, counters))
+    print('\'{}\' from {} to {}! Time: {}\n'.format(message, sender_pid + 1, identifier + 1, counters))
     return
 
-
-# !!!
 
 def process_one(pipe12, pipe13, identifier):
     event(identifier)
@@ -76,7 +80,7 @@ def process_three(pipe32, pipe13, identifier):
 
 
 if __name__ == '__main__':
-    qtt, pipes, operations = read_configs_from('config.txt')
+    qtt, pipes = read_configs_from('config.txt')
 
     counters = counters_for(qtt)
 
@@ -85,11 +89,11 @@ if __name__ == '__main__':
     one_and_three, three_and_one = pipes[(0, 2)]
 
     process1 = Process(target=process_one,
-                       args=(one_and_two, one_and_three, 1))
+                       args=(one_and_two, one_and_three, 0))
     process2 = Process(target=process_two,
-                       args=(two_and_one, two_and_three, 2))
+                       args=(two_and_one, two_and_three, 1))
     process3 = Process(target=process_three,
-                       args=(three_and_two, three_and_one, 3))
+                       args=(three_and_two, three_and_one, 2))
 
     process1.start()
     process2.start()
