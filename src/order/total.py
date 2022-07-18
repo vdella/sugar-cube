@@ -70,6 +70,13 @@ class TotalWorker:
         self.deliver(pipe13)
 
 
+class WorkerPool:
+
+    def __init__(self, process_qtt):
+        self.process_qtt = process_qtt
+        self.workers = [TotalWorker(i, self.process_qtt) for i in range(self.process_qtt)]
+
+
 if __name__ == '__main__':
     qtt, pipes = read_configs_from('config.txt')
 
@@ -77,13 +84,11 @@ if __name__ == '__main__':
     two_and_three, three_and_two = pipes[(1, 2)]
     one_and_three, three_and_one = pipes[(0, 2)]
 
-    worker1 = TotalWorker(0, 3)
-    worker2 = TotalWorker(1, 3)
-    worker3 = TotalWorker(2, 3)
+    pool = WorkerPool(3)
 
-    process1 = worker1.process(target=worker1.process_one, args=(one_and_two, one_and_three))
-    process2 = worker2.process(target=worker2.process_two, args=(two_and_one, two_and_three))
-    process3 = worker3.process(target=worker3.process_three, args=(three_and_two, three_and_one))
+    process1 = pool.workers[0].process(target=pool.workers[0].process_one, args=(one_and_two, one_and_three))
+    process2 = pool.workers[1].process(target=pool.workers[1].process_two, args=(two_and_one, two_and_three))
+    process3 = pool.workers[2].process(target=pool.workers[2].process_three, args=(three_and_two, three_and_one))
 
     process1.start()
     process2.start()
