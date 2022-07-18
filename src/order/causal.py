@@ -1,5 +1,4 @@
-from multiprocessing import Process, Pipe
-from os import getpid
+from multiprocessing import Process
 from datetime import datetime
 from src.parsing.parser import read_configs_from
 
@@ -7,19 +6,17 @@ from src.parsing.parser import read_configs_from
 counter = 0
 
 
-def local_time():
+def local_time_for(pid: int):
     """:returns: a concatenation of strings stating the logical and physical times for a process."""
-    process_info = 'Process {}\n'.format(getpid())
+    process_info = 'Process {}\n'.format(pid)
     logical_time = '> Logical time = {}u\n'.format(counter)
     physical_time = '> Physical time = {}ms'.format(datetime.now())
     return process_info + logical_time + physical_time
 
 
-def update_time_according_to(time_stamp):
+def sync_time_to(time_stamp):
     """Upon receiving a message, compares its internal clock with the sender's :param timestamp
-    and :returns the biggest value between both.
-    :return:
-    """
+    and :returns the biggest value between both."""
     return max(time_stamp, counter) + 1
 
 
@@ -31,7 +28,7 @@ def event(idenfier):
     print('Event has happened in {}! Time = {}u\n'.format(idenfier, counter))
 
 
-def send(content, pipe: Pipe, identifier):
+def send(content, pipe, identifier):
     """Sends :param content through a :param pipe for another process. Its identifier
     is appended in order to be easier to observe which process sent the message. Updates
     the internal clock."""
@@ -44,15 +41,11 @@ def send(content, pipe: Pipe, identifier):
 
 
 def receive(pipe, identifier):
-    """Receives a message through a :param pipe. Updates the internal clock.
-
-    :param pipe:
-    :param identifier:
-    """
+    """Receives a message through a :param pipe. Updates the internal clock."""
     message, sender_pid, timestamp = pipe.recv()
 
     global counter
-    counter = update_time_according_to(timestamp)
+    counter = sync_time_to(timestamp)
 
     print('\'{}\' from {} to {}! Time: {}\n'.format(message, sender_pid, identifier, counter))
     return
