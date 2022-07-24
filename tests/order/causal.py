@@ -32,14 +32,20 @@ class CausalOrderTest(unittest.TestCase):
 
         return result1.value, result2.value, result3.value
 
-    def test_causal_order_for_process1(self):
-        self.assertTrue(6, self.execute_processes()[0])
+    def test_causal_order(self):
+        exec_results = self.execute_processes()
 
-    def test_causal_order_for_process2(self):
-        self.assertTrue(4, self.execute_processes()[1])
+        def test_causal_order_for_process1():
+            self.assertTrue(6, exec_results[0])
+        test_causal_order_for_process1()
 
-    def test_causal_order_for_process3(self):
-        self.assertTrue(7, self.execute_processes()[2])
+        def test_causal_order_for_process2():
+            self.assertTrue(4, exec_results[1])
+        test_causal_order_for_process2()
+
+        def test_causal_order_for_process3():
+            self.assertTrue(7, exec_results[2])
+        test_causal_order_for_process3()
 
 
 def process_one(worker1, pipe12, pipe13, result):

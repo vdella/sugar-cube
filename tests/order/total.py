@@ -38,14 +38,20 @@ class TotalOrderTest(unittest.TestCase):
 
         return result1, result2, result3
 
-    def test_total_order_for_process1(self):
-        self.assertTrue([5, 3, 1], self.execute_processes()[0])
+    def test_total_order(self):
+        exec_results = self.execute_processes()
 
-    def test_total_order_for_process2(self):
-        self.assertTrue([2, 3, 1], self.execute_processes()[1])
+        def test_total_order_for_process1():
+            self.assertTrue([5, 3, 1], exec_results[0])
+        test_total_order_for_process1()
 
-    def test_total_order_for_process3(self):
-        self.assertTrue([5, 3, 3], self.execute_processes()[2])
+        def test_total_order_for_process2():
+            self.assertTrue([2, 3, 1], exec_results[1])
+        test_total_order_for_process2()
+
+        def test_total_order_for_process3():
+            self.assertTrue([5, 3, 3], exec_results[2])
+        test_total_order_for_process3()
 
 
 def process_one(worker1, pipe12, pipe13):
@@ -56,7 +62,7 @@ def process_one(worker1, pipe12, pipe13):
     worker1.broadcast('Yes.', [pipe13])
 
     global result1
-    result1 = [counter for counter in worker1.counters]
+    result1 = [counter for counter in worker1.counter]
 
 
 def process_two(worker2, pipe21, pipe23):
@@ -65,7 +71,7 @@ def process_two(worker2, pipe21, pipe23):
     worker2.broadcast('A!', [pipe21])
 
     global result2
-    result2 = [counter for counter in worker2.counters]
+    result2 = [counter for counter in worker2.counter]
 
 
 def process_three(worker3, pipe32, pipe13):
@@ -74,7 +80,7 @@ def process_three(worker3, pipe32, pipe13):
     worker3.deliver(pipe13)
 
     global result3
-    result3 = [counter for counter in worker3.counters]
+    result3 = [counter for counter in worker3.counter]
 
 
 if __name__ == '__main__':
