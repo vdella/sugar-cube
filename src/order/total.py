@@ -1,5 +1,5 @@
 from multiprocessing import Process, Pipe
-from src.patterns.decorators import *
+from src.patterns.decorators.order import *
 
 
 class TotalWorker:

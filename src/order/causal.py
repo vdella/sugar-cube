@@ -1,5 +1,5 @@
 from multiprocessing import Process
-from src.patterns.decorators import *
+from src.patterns.decorators.order import *
 
 
 class PartialWorker:
