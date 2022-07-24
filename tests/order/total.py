@@ -1,5 +1,4 @@
 import unittest
-from src.parsing.parser import read_configs_from
 from src.order.total import WorkerPool
 from multiprocessing import Array
 
@@ -13,8 +12,6 @@ class TotalOrderTest(unittest.TestCase):
 
     @staticmethod
     def execute_processes():
-        qtt, channels = read_configs_from('config.txt')
-
         one_and_two, two_and_one = channels[(0, 1)]
         two_and_three, three_and_two = channels[(1, 2)]
         one_and_three, three_and_one = channels[(0, 2)]
@@ -56,10 +53,10 @@ class TotalOrderTest(unittest.TestCase):
 
 def process_one(worker1, pipe12, pipe13):
     worker1.event()
-    worker1.broadcast('Hello!', [pipe12])
+    worker1.send('Hello!', [pipe12])
     worker1.event()
     worker1.deliver(pipe12)
-    worker1.broadcast('Yes.', [pipe13])
+    worker1.send('Yes.', [pipe13])
 
     global result1
     result1 = [counter for counter in worker1.counter]
@@ -68,14 +65,14 @@ def process_one(worker1, pipe12, pipe13):
 def process_two(worker2, pipe21, pipe23):
     worker2.deliver(pipe23)
     worker2.deliver(pipe21)
-    worker2.broadcast('A!', [pipe21])
+    worker2.send('A!', [pipe21])
 
     global result2
     result2 = [counter for counter in worker2.counter]
 
 
 def process_three(worker3, pipe32, pipe13):
-    worker3.broadcast('Hell yeah!', [pipe32])
+    worker3.send('Hell yeah!', [pipe32])
     worker3.event()
     worker3.deliver(pipe13)
 

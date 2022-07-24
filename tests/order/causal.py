@@ -1,5 +1,4 @@
 import unittest
-from src.parsing.parser import read_configs_from
 from src.order.causal import PartialWorker
 from multiprocessing import Value
 

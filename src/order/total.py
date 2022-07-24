@@ -28,13 +28,13 @@ class TotalWorker:
         self.counter[self.serial] += 1
 
     @notify_send
-    def broadcast(self, content, pipes):
+    def send(self, content, pipes):
         self.counter[self.serial] += 1
 
         for pipe in pipes:
             pipe.send((content, self.serial, self.counter))
 
-    @notify_receive
+    @notify_message_arrival
     def deliver(self, pipe):
         """Receives a message through a :param pipe. Updates the internal clock."""
         message, sender_pid, timestamp = pipe.recv()

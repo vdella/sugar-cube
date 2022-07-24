@@ -31,7 +31,7 @@ class PartialWorker:
         self.counter += 1
         pipe.send((content, self.serial, self.counter))
 
-    @notify_receive
+    @notify_message_arrival
     def receive(self, pipe):
         """Receives a message through a :param pipe. Updates the internal clock."""
         message, sender_pid, timestamp = pipe.recv()
