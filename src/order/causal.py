@@ -14,7 +14,7 @@ class PartialWorker:
 
     def sync_time_to(self, time_stamp):
         """Upon receiving a message, compares its internal clock with the sender's :param timestamp
-        and :returns the biggest value between both."""
+        and :returns the biggest value between both. Updates its internal clock."""
         return max(time_stamp, self.counter) + 1
 
     @notify_event
