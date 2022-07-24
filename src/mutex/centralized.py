@@ -18,6 +18,9 @@ def baton_pass(total_worker: TotalWorker):
 
 
 def target(total_worker: TotalWorker):
+    """A target function for a process. Its :param total_worker
+    will wait for messages while it cannot obtain the critical region and,
+    when it does, will call an event()."""
     while baton.value != total_worker.serial:
         total_worker.deliver(total_worker.pipes[baton.value])
 
