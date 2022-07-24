@@ -1,12 +1,13 @@
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
 from src.patterns.decorators import *
 
 
 class TotalWorker:
 
-    def __init__(self, serial, process_qtt):
+    def __init__(self, serial, process_qtt, pipes):
         self.counter = [0 for _ in range(process_qtt)]
         self.serial = serial
+        self.pipes = pipes
 
     @staticmethod
     def process(target, args):
@@ -28,13 +29,11 @@ class TotalWorker:
         self.counter[self.serial] += 1
 
     @notify_send
-    def send(self, content, pipes):
+    def send(self, content, pipe):
         self.counter[self.serial] += 1
+        pipe.send((content, self.serial, self.counter))
 
-        for pipe in pipes:
-            pipe.send((content, self.serial, self.counter))
-
-    @notify_message_arrival
+    @notify_arrival
     def deliver(self, pipe):
         """Receives a message through a :param pipe. Updates the internal clock."""
         message, sender_pid, timestamp = pipe.recv()
@@ -47,4 +46,23 @@ class WorkerPool:
 
     def __init__(self, process_qtt):
         self.process_qtt = process_qtt
-        self.workers = [TotalWorker(i, self.process_qtt) for i in range(self.process_qtt)]
+        pipes = WorkerPool.pipes_for(self.process_qtt)
+        self.workers = [TotalWorker(i, self.process_qtt, pipes[i]) for i in range(self.process_qtt)]
+
+    def __getitem__(self, index):
+        return self.workers[index]
+
+    @staticmethod
+    def pipes_for(process_qtt):
+        pipes = [[None for _ in range(process_qtt)] for _ in range(process_qtt)]
+
+        for i in range(process_qtt):
+            for j in range(process_qtt):
+                if i != j:
+                    pipes[i][j], pipes[j][i] = Pipe()
+
+        return pipes
+
+
+if __name__ == '__main__':
+    print(WorkerPool.pipes_for(3))

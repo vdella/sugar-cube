@@ -1,5 +1,5 @@
 import unittest
-from src.order.total import WorkerPool
+from src.order.total import WorkerPool, TotalWorker
 from multiprocessing import Array
 
 
@@ -12,18 +12,11 @@ class TotalOrderTest(unittest.TestCase):
 
     @staticmethod
     def execute_processes():
-        one_and_two, two_and_one = channels[(0, 1)]
-        two_and_three, three_and_two = channels[(1, 2)]
-        one_and_three, three_and_one = channels[(0, 2)]
-
         pool = WorkerPool(3)
-        worker1 = pool.workers[0]
-        worker2 = pool.workers[1]
-        worker3 = pool.workers[2]
 
-        process1 = worker1.process(target=process_one, args=(worker1, one_and_two, one_and_three))
-        process2 = worker2.process(target=process_two, args=(worker2, two_and_one, two_and_three))
-        process3 = worker3.process(target=process_three, args=(worker3, three_and_two, three_and_one))
+        process1 = pool[0].process(target=process_one, args=(pool[0],))
+        process2 = pool[1].process(target=process_two, args=(pool[1],))
+        process3 = pool[2].process(target=process_three, args=(pool[2],))
 
         process1.start()
         process2.start()
@@ -51,33 +44,33 @@ class TotalOrderTest(unittest.TestCase):
         test_total_order_for_process3()
 
 
-def process_one(worker1, pipe12, pipe13):
-    worker1.event()
-    worker1.send('Hello!', [pipe12])
-    worker1.event()
-    worker1.deliver(pipe12)
-    worker1.send('Yes.', [pipe13])
+def process_one(worker0: TotalWorker):
+    worker0.event()
+    worker0.send('Hello!', worker0.pipes[1])
+    worker0.event()
+    worker0.deliver(worker0.pipes[1])
+    worker0.send('Yes.', worker0.pipes[2])
 
     global result1
-    result1 = [counter for counter in worker1.counter]
+    result1 = [counter for counter in worker0.counter]
 
 
-def process_two(worker2, pipe21, pipe23):
-    worker2.deliver(pipe23)
-    worker2.deliver(pipe21)
-    worker2.send('A!', [pipe21])
+def process_two(worker1: TotalWorker):
+    worker1.deliver(worker1.pipes[2])
+    worker1.deliver(worker1.pipes[0])
+    worker1.send('A!', worker1.pipes[0])
 
     global result2
-    result2 = [counter for counter in worker2.counter]
+    result2 = [counter for counter in worker1.counter]
 
 
-def process_three(worker3, pipe32, pipe13):
-    worker3.send('Hell yeah!', [pipe32])
-    worker3.event()
-    worker3.deliver(pipe13)
+def process_three(worker2: TotalWorker):
+    worker2.send('Hell yeah!', worker2.pipes[1])
+    worker2.event()
+    worker2.deliver(worker2.pipes[0])
 
     global result3
-    result3 = [counter for counter in worker3.counter]
+    result3 = [counter for counter in worker2.counter]
 
 
 if __name__ == '__main__':

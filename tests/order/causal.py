@@ -1,17 +1,15 @@
 import unittest
 from src.order.causal import PartialWorker
-from multiprocessing import Value
+from multiprocessing import Value, Pipe
 
 
 class CausalOrderTest(unittest.TestCase):
 
     @staticmethod
     def execute_processes():
-        qtt, pipes = read_configs_from('config.txt')
-
-        one_and_two, two_and_one = pipes[(0, 1)]
-        two_and_three, three_and_two = pipes[(1, 2)]
-        one_and_three, three_and_one = pipes[(0, 2)]
+        one_and_two, two_and_one = Pipe()
+        two_and_three, three_and_two = Pipe()
+        one_and_three, three_and_one = Pipe()
 
         worker1, result1 = PartialWorker(0), Value('i', 0)
         worker2, result2 = PartialWorker(1), Value('i', 0)

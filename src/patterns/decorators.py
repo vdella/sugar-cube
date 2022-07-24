@@ -1,10 +1,13 @@
 def notify_send(func):
     def wrapper(*args):
-        func(args)
-
         worker = args[0]
         content = args[1]
+        pipe = args[2]
+
+        func(worker, content, pipe)
+
         print('Sent \'{}\' from {}! Time: {}\n'.format(content, worker.serial, worker.counter))
+
     return wrapper
 
 
@@ -17,7 +20,7 @@ def notify_event(event):
     return wrapper
 
 
-def notify_message_arrival(func):
+def notify_arrival(func):
     def wrapper(*args):
         worker = args[0]
         pipe = args[1]
