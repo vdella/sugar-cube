@@ -3,16 +3,17 @@ from random import randint
 from multiprocessing import Value
 from src.patterns.decorators.mutex import notify_baton_pass
 
+
 baton = Value('i', 0)  # As the index of the actual process to be looked upon in a list.
 process_qtt = 0
 shared_resource = 0  # Creates a simple value as the shared resource between processes.
 
 
+@notify_baton_pass
 def baton_pass(total_worker):
     """Updates the batom value as it's an index of a circular list."""
     global baton
     baton.value = (baton.value + 1) % process_qtt
-    print('Baton passed! Value: {}\n'.format(baton.value))
     total_worker.event()
 
 
