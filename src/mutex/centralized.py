@@ -1,19 +1,40 @@
 from src.order.total import WorkerPool
 from random import randint
+from multiprocessing import Value
 
-batom = 0  # As the index of the actual process to be looked upon in a list.
+baton = Value('i', 0)  # As the index of the actual process to be looked upon in a list.
 process_qtt = 0
+shared_resource = 0  # Creates a simple value as the shared resource between processes.
 
 
-def batom_pass():
+def baton_pass():
     """Updates the batom value as it's an index of a circular list."""
-    global batom
-    batom += (batom + 1) % process_qtt
+    global baton
+    baton.value = (baton.value + 1) % process_qtt
+    print('Baton passed! Value: {}\n'.format(baton.value))
+
+
+def target(total_worker):
+    while baton.value != total_worker.serial:
+        continue
+
+    if baton.value == total_worker.serial:
+        if total_worker.state == 'WANTED':
+            global shared_resource
+            shared_resource = total_worker.serial
+
+            total_worker.state = 'RELEASED'
+            print('{} obtained the resource!'.format(total_worker.serial))
+        baton_pass()
 
 
 if __name__ == '__main__':
     pool = WorkerPool(7)
     process_qtt = pool.process_qtt
+
+    for i, worker in enumerate(pool.workers):
+        worker.state = 'RELEASED'
+        pool.processes[i] = worker.process(target=target, args=(worker,))
 
     # Two processes want to utilize the shared resource. We get them by randint(), but...
     wanted1 = randint(0, process_qtt - 1)
@@ -26,5 +47,8 @@ if __name__ == '__main__':
     pool.workers[wanted1].state = 'WANTED'
     pool.workers[wanted2].state = 'WANTED'
 
-    # Creates a simple list as the shared resource between processes.
-    shared_resource = [i for i in range(process_qtt)]
+    print('{} and {} want the resource!'.format(wanted1, wanted2))
+
+    pool.start()
+
+    pool.join()
