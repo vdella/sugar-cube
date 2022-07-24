@@ -14,17 +14,13 @@ class TotalOrderTest(unittest.TestCase):
     def execute_processes():
         pool = WorkerPool(3)
 
-        process1 = pool[0].process(target=process_one, args=(pool[0],))
-        process2 = pool[1].process(target=process_two, args=(pool[1],))
-        process3 = pool[2].process(target=process_three, args=(pool[2],))
+        targets = [process_one, process_two, process_three]
 
-        process1.start()
-        process2.start()
-        process3.start()
+        for i, worker in enumerate(pool.workers):
+            pool.processes[i] = worker.process(target=targets[i], args=(worker,))
 
-        process1.join()
-        process2.join()
-        process3.join()
+        pool.start()
+        pool.join()
 
         return result1, result2, result3
 

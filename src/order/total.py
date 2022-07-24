@@ -33,6 +33,13 @@ class TotalWorker:
         self.counter[self.serial] += 1
         pipe.send((content, self.serial, self.counter))
 
+    def broadcast(self, content):
+        self.counter[self.serial] += 1
+
+        for pipe in self.pipes:
+            if pipe:
+                pipe.send((content, self.serial, self.counter))
+
     @notify_arrival
     def deliver(self, pipe):
         """Receives a message through a :param pipe. Updates the internal clock."""
@@ -48,9 +55,16 @@ class WorkerPool:
         self.process_qtt = process_qtt
         pipes = WorkerPool.pipes_for(self.process_qtt)
         self.workers = [TotalWorker(i, self.process_qtt, pipes[i]) for i in range(self.process_qtt)]
+        self.processes = [Process() for _ in range(self.process_qtt)]
 
     def __getitem__(self, index):
         return self.workers[index]
+
+    def start(self):
+        [process.start() for process in self.processes]
+
+    def join(self):
+        [process.join() for process in self.processes]
 
     @staticmethod
     def pipes_for(process_qtt):
