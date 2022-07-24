@@ -1,4 +1,4 @@
-from src.order.total import WorkerPool
+from src.order.total import WorkerPool, TotalWorker
 from random import randint
 from multiprocessing import Value
 from src.patterns.decorators.mutex import notify_baton_pass
@@ -10,16 +10,16 @@ shared_resource = 0  # Creates a simple value as the shared resource between pro
 
 
 @notify_baton_pass
-def baton_pass(total_worker):
+def baton_pass(total_worker: TotalWorker):
     """Updates the batom value as it's an index of a circular list."""
     global baton
     baton.value = (baton.value + 1) % process_qtt
-    total_worker.event()
+    total_worker.broadcast('Baton value = {}'.format(baton.value - 1))
 
 
-def target(total_worker):
+def target(total_worker: TotalWorker):
     while baton.value != total_worker.serial:
-        continue
+        total_worker.deliver(total_worker.pipes[baton.value])
 
     if baton.value == total_worker.serial:
         if total_worker.state == 'WANTED':
@@ -27,7 +27,8 @@ def target(total_worker):
             shared_resource = total_worker.serial
 
             total_worker.state = 'RELEASED'
-            print('{} obtained the resource!'.format(total_worker.serial))
+            print('{} obtained the resource! Time: {}'.format(total_worker.serial, total_worker.counter))
+            total_worker.event()
         baton_pass(total_worker)
 
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     pool.workers[wanted1].state = 'WANTED'
     pool.workers[wanted2].state = 'WANTED'
 
-    print('{} and {} want the resource!'.format(wanted1, wanted2))
+    print('{} and {} want the resource!\n'.format(wanted1, wanted2))
 
     pool.start()
 
