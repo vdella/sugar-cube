@@ -1,55 +1,46 @@
 from multiprocessing import Process
-from datetime import datetime
+from src.patterns.decorators import *
 
 
 class TotalWorker:
 
     def __init__(self, serial, process_qtt):
-        self.counters = [0 for _ in range(process_qtt)]
+        self.counter = [0 for _ in range(process_qtt)]
         self.serial = serial
 
     @staticmethod
     def process(target, args):
         return Process(target=target, args=args)
 
-    def local_time(self):
-        """:returns: a concatenation of strings stating the logical and physical times for a process."""
-        process_info = 'Process {}\n'.format(self.serial)
-        logical_time = '> Logical time = {}\n'.format(self.counters)
-        physical_time = '> Physical time = {}ms'.format(datetime.now())
-        return process_info + logical_time + physical_time
-
     def sync_time_to(self, timestamps: list):
-        for i, _ in enumerate(self.counters):
-            self.counters[i] = max(self.counters[i], timestamps[i])
+        for i, _ in enumerate(self.counter):
+            self.counter[i] = max(self.counter[i], timestamps[i])
 
             if i == self.serial:
-                self.counters[i] += 1
+                self.counter[i] += 1
 
-        return self.counters
+        return self.counter
 
+    @notify_event
     def event(self):
         """Abstract event, as some internal operation only known by the process that executes it.
         Updates its clock."""
-        self.counters[self.serial] += 1
-        print('Event has happened in {}! Time = {}\n'.format(self.serial + 1, self.counters))
+        self.counter[self.serial] += 1
 
+    @notify_send
     def broadcast(self, content, pipes):
-        self.counters[self.serial] += 1
+        self.counter[self.serial] += 1
 
         for pipe in pipes:
-            pipe.send((content, self.serial, self.counters))
+            pipe.send((content, self.serial, self.counter))
 
-        print('Message \'{}\' from {}! Time: {}\n'.format(content, self.serial + 1, self.counters))
-
+    @notify_receive
     def deliver(self, pipe):
         """Receives a message through a :param pipe. Updates the internal clock."""
         message, sender_pid, timestamp = pipe.recv()
+        self.counter = self.sync_time_to(timestamp)
 
-        self.counters = self.sync_time_to(timestamp)
-
-        print('\'{}\' from {} to {}! Time: {}\n'.format(message, sender_pid + 1, self.serial + 1, self.counters))
-        return
+        return message, sender_pid
 
 
 class WorkerPool:
